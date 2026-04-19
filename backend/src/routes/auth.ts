@@ -13,6 +13,27 @@ const loginBody = z.object({
   password: z.string(),
 });
 
+
+type AuthUserOut = {
+  id: string;
+  email: string;
+  friendCode: string;
+  nickname: string | null;
+  comparePublic: boolean;
+};
+
+function authUserOut(user: { id: string; email: string; friendCode: string } & Record<string, unknown>): AuthUserOut {
+  const nickname = user["nickname"];
+  const comparePublic = user["comparePublic"];
+  return {
+    id: user.id,
+    email: user.email,
+    friendCode: user.friendCode,
+    nickname: typeof nickname === "string" || nickname === null ? nickname : null,
+    comparePublic: comparePublic === false ? false : true,
+  };
+}
+
 export const authRoutes: FastifyPluginAsync = async (app) => {
   app.post("/auth/register", async (request, reply) => {
     const body = registerBody.safeParse(request.body);
@@ -42,13 +63,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const token = signToken({ sub: user.id, email: user.email });
     return {
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        friendCode: user.friendCode,
-        nickname: user.nickname,
-        comparePublic: user.comparePublic,
-      },
+      user: authUserOut(user),
     };
   });
 
@@ -68,13 +83,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const token = signToken({ sub: user.id, email: user.email });
     return {
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        friendCode: user.friendCode,
-        nickname: user.nickname,
-        comparePublic: user.comparePublic,
-      },
+      user: authUserOut(user),
     };
   });
 };

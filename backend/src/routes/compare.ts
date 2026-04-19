@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
+import type { User } from "@prisma/client";
 import { z } from "zod";
 import { authenticate } from "../plugins/auth.js";
 import {
@@ -21,7 +22,7 @@ const compareBody = z.object({
   save: z.boolean().optional(),
 });
 
-function nick(u: { nickname: string | null; friendCode: string }) {
+function nick(u: { friendCode: string; nickname?: string | null }) {
   const n = u.nickname?.trim();
   if (n) return n;
   return `Taper${u.friendCode.slice(-4)}`;
@@ -161,10 +162,7 @@ export const compareRoutes: FastifyPluginAsync = async (app) => {
         ),
       ].slice(0, 3);
 
-      const friends: Array<{
-        user: { id: string; nickname: string | null; friendCode: string };
-        label: string;
-      }> = [];
+      const friends: Array<{ user: User; label: string }> = [];
 
       for (const code of rawCodes) {
         const f = await prisma.user.findUnique({
