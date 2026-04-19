@@ -18,8 +18,8 @@ function MediaRow({
   footer: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-3 rounded-xl border border-stone-100 bg-white/95 p-3">
-      <div className="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-stone-200">
+    <div className="flex gap-3 rounded-xl border-2 border-black/10 bg-white p-3 shadow-sm">
+      <div className="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-stone-200 ring-1 ring-black/10">
         {work.posterOrCoverUrl ? (
           <img
             src={work.posterOrCoverUrl}
@@ -27,16 +27,16 @@ function MediaRow({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center p-1 text-center text-[10px] leading-tight text-stone-700">
+          <div className="flex h-full w-full items-center justify-center p-1 text-center text-[10px] font-bold leading-tight text-black">
             <TitleOneLine text={work.title} max={48} />
           </div>
         )}
       </div>
       <div className="min-w-0 flex-1 text-sm">
-        <p className="font-semibold leading-snug">
+        <p className="font-extrabold leading-snug text-black">
           <TitleOneLine text={work.title} max={56} />
         </p>
-        <p className="text-xs text-stone-500">
+        <p className="text-xs font-semibold text-[var(--color-tape-muted)]">
           {work.mediaType.toUpperCase()}
           {work.year != null ? ` · ${work.year}` : ""}
         </p>
@@ -69,7 +69,7 @@ export function ComparePage() {
           .map((c) => c.trim().toUpperCase())
           .filter(Boolean)
       ),
-    ].slice(0, 4);
+    ].slice(0, 3);
   }
 
   async function run(e: FormEvent) {
@@ -77,7 +77,7 @@ export function ComparePage() {
     if (!token) return;
     const friendCodes = parseCodes(codesRaw);
     if (friendCodes.length === 0) {
-      setErr("친구 코드를 1개 이상 입력하세요.");
+      setErr("Enter at least one friend code.");
       return;
     }
     setLoading(true);
@@ -88,7 +88,7 @@ export function ComparePage() {
       const sn = await api.snapshots(token);
       setSnapshots(sn.snapshots);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "비교 실패");
+      setErr(e instanceof Error ? e.message : "Compare failed");
     } finally {
       setLoading(false);
     }
@@ -122,48 +122,48 @@ export function ComparePage() {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">친구와 취향 비교</h1>
-          <p className="mt-1 text-sm text-[var(--color-tape-muted)]">
-            친구 코드를 최대 4개까지 입력하세요 (쉼표·줄바꿈·공백으로 구분). 이메일은
-            표시되지 않습니다.
+          <h1 className="text-2xl font-extrabold text-black">Compare with friends</h1>
+          <p className="mt-1 text-sm font-semibold text-[var(--color-tape-muted)]">
+            Enter up to <strong className="text-black">3</strong> friend codes (comma,
+            space, or newline). Emails are never shown.
           </p>
         </div>
 
         <form
           onSubmit={run}
-          className="space-y-3 rounded-2xl border border-stone-200/80 bg-[var(--color-tape-card)] p-4"
+          className="space-y-3 rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-4 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
         >
           <textarea
-            className="min-h-[88px] w-full rounded-xl border border-stone-200 bg-white px-3 py-2 font-mono text-sm uppercase"
-            placeholder={"예: ABCD1234EFGH5678\nWXYZ9876KLMN5432"}
+            className="min-h-[88px] w-full rounded-xl border-2 border-black/15 bg-white px-3 py-2 font-mono text-sm font-bold uppercase text-black"
+            placeholder={"e.g. ABCD1234EFGH5678\nWXYZ9876KLMN5432"}
             value={codesRaw}
             onChange={(e) => setCodesRaw(e.target.value)}
           />
-          <label className="flex items-center gap-2 text-sm text-stone-600">
+          <label className="flex items-center gap-2 text-sm font-bold text-[var(--color-tape-muted)]">
             <input
               type="checkbox"
               checked={saveSnap}
               onChange={(e) => setSaveSnap(e.target.checked)}
             />
-            결과를 히스토리에 저장
+            Save result to history
           </label>
           <button
             type="submit"
             disabled={loading}
-            className="rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="rounded-xl bg-black px-5 py-2.5 text-sm font-extrabold text-[var(--color-tape-lime)] shadow-[4px_4px_0_0_var(--color-tape-lime)] disabled:opacity-60"
           >
-            {loading ? "비교 중…" : "비교하기"}
+            {loading ? "Comparing…" : "Compare"}
           </button>
         </form>
         {err && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm font-semibold text-red-600" role="alert">
             {err}
           </p>
         )}
 
         {snapshots.filter((s) => s.kind === "compare").length > 0 && (
-          <div className="rounded-xl border border-stone-200 bg-white/80 p-3 text-sm">
-            <p className="font-medium text-stone-700">저장된 비교 불러오기</p>
+          <div className="rounded-xl border-2 border-black/10 bg-white p-3 text-sm shadow-sm">
+            <p className="font-extrabold text-black">Saved compares</p>
             <ul className="mt-2 flex flex-wrap gap-2">
               {snapshots
                 .filter((s) => s.kind === "compare")
@@ -171,7 +171,7 @@ export function ComparePage() {
                   <li key={s.id}>
                     <button
                       type="button"
-                      className="rounded-lg bg-stone-100 px-2 py-1 text-xs hover:bg-stone-200"
+                      className="rounded-lg bg-[var(--color-tape-lime-soft)] px-2 py-1 text-xs font-extrabold text-black hover:brightness-95"
                       onClick={() => loadSnapshot(s.id)}
                     >
                       {s.label ?? s.id.slice(0, 8)}
@@ -184,19 +184,23 @@ export function ComparePage() {
 
         {data && (
           <div className="space-y-8">
-            <section className="rounded-2xl border border-stone-200/80 bg-white/95 p-6">
-              <p className="text-xs text-stone-500">나</p>
-              <p className="font-medium">{data.meLabel}</p>
-              <p className="mt-2 text-xs text-stone-500">함께 비교한 친구</p>
-              <ul className="mt-1 text-sm">
+            <section className="rounded-2xl border-2 border-black/10 bg-white p-6 shadow-[3px_3px_0_0_rgba(0,0,0,0.06)]">
+              <p className="text-xs font-bold text-[var(--color-tape-muted)]">You</p>
+              <p className="font-extrabold text-black">{data.meLabel}</p>
+              <p className="mt-2 text-xs font-bold text-[var(--color-tape-muted)]">
+                Friends in this compare
+              </p>
+              <ul className="mt-1 text-sm font-semibold">
                 {data.friends.map((f) => (
                   <li key={f.friendCode}>
                     {f.nicknameLabel}{" "}
-                    <code className="text-xs text-stone-400">({f.friendCode})</code>
+                    <code className="text-xs font-mono text-[var(--color-tape-muted)]">
+                      ({f.friendCode})
+                    </code>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">
+              <p className="mt-4 whitespace-pre-wrap text-sm font-medium leading-relaxed text-black">
                 {data.result.introduction}
               </p>
             </section>
@@ -204,16 +208,17 @@ export function ComparePage() {
             {data.result.friends.map((f) => (
               <section
                 key={f.nicknameLabel}
-                className="rounded-2xl border border-stone-200/80 bg-[var(--color-tape-card)] p-6"
+                className="rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
               >
-                <p className="text-2xl font-bold text-[var(--color-tape-accent)]">
-                  유사도 {f.similarityScore}
-                  <span className="text-lg font-normal text-stone-500">/100</span>{" "}
-                  <span className="text-base font-semibold text-stone-800">
-                    {f.nicknameLabel}
+                <p className="text-2xl font-extrabold text-black">
+                  Match{" "}
+                  <span className="rounded-md bg-[var(--color-tape-lime)] px-2 py-0.5 text-black ring-2 ring-black/20">
+                    {f.similarityScore}
                   </span>
+                  <span className="text-lg font-bold text-[var(--color-tape-muted)]">/100</span>{" "}
+                  <span className="text-base font-extrabold">{f.nicknameLabel}</span>
                 </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
+                <p className="mt-3 whitespace-pre-wrap text-sm font-medium leading-relaxed text-black">
                   {f.paragraph}
                 </p>
               </section>
@@ -221,12 +226,14 @@ export function ComparePage() {
 
             {data.result.overlapCommentary.length > 0 && (
               <section>
-                <h2 className="text-lg font-semibold">같이 좋아한 작품 코멘트</h2>
+                <h2 className="text-lg font-extrabold text-black">Overlap you both loved</h2>
                 <ul className="mt-2 space-y-2 text-sm">
                   {data.result.overlapCommentary.map((o) => (
-                    <li key={o.title} className="rounded-lg bg-white/90 p-3">
-                      <span className="font-medium">{o.title}</span>
-                      <p className="mt-1 text-stone-700">{o.sharedJoyComment}</p>
+                    <li key={o.title} className="rounded-lg border border-black/10 bg-white p-3">
+                      <span className="font-extrabold text-black">{o.title}</span>
+                      <p className="mt-1 font-medium text-[var(--color-tape-muted)]">
+                        {o.sharedJoyComment}
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -234,14 +241,14 @@ export function ComparePage() {
             )}
 
             <section>
-              <h2 className="text-lg font-semibold">함께 볼 만한 신작·발견</h2>
+              <h2 className="text-lg font-extrabold text-black">Watch together — new finds</h2>
               <ul className="mt-3 space-y-4">
                 {data.result.watchTogetherNew.map((item, i) => (
                   <li key={i}>
                     <MediaRow
                       work={item.work as WorkCard}
                       footer={
-                        <p className="mt-2 text-xs text-stone-700">
+                        <p className="mt-2 text-xs font-medium text-black">
                           {item.recommendationPitch}
                         </p>
                       }
@@ -252,8 +259,8 @@ export function ComparePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold">
-                친구 목록에서 — 내 취향으로 추천
+              <h2 className="text-lg font-extrabold text-black">
+                From friends&apos; libraries — for you
               </h2>
               <ul className="mt-3 space-y-4">
                 {data.result.picksFromFriendLibsForMe.map((item, i) => (
@@ -262,10 +269,10 @@ export function ComparePage() {
                       work={item.work}
                       footer={
                         <>
-                          <p className="mt-1 text-xs text-amber-800">
+                          <p className="mt-1 text-xs font-extrabold text-black">
                             {item.friendNicknameLabel}
                           </p>
-                          <p className="mt-2 text-xs leading-relaxed text-stone-800">
+                          <p className="mt-2 text-xs font-medium leading-relaxed text-black">
                             {item.whyForMe}
                           </p>
                         </>
@@ -277,8 +284,8 @@ export function ComparePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold">
-                내 목록에서 — 친구에게 추천
+              <h2 className="text-lg font-extrabold text-black">
+                From your list — for friends
               </h2>
               <ul className="mt-3 space-y-4">
                 {data.result.picksFromMyLibForFriends.map((item, i) => (
@@ -287,10 +294,10 @@ export function ComparePage() {
                       work={item.work}
                       footer={
                         <>
-                          <p className="mt-1 text-xs text-amber-800">
-                            대상: {item.toFriendNicknameLabel}
+                          <p className="mt-1 text-xs font-extrabold text-black">
+                            For: {item.toFriendNicknameLabel}
                           </p>
-                          <p className="mt-2 text-xs leading-relaxed text-stone-800">
+                          <p className="mt-2 text-xs font-medium leading-relaxed text-black">
                             {item.whyTheyMightLike}
                           </p>
                         </>
@@ -304,7 +311,7 @@ export function ComparePage() {
             <div className="overflow-x-auto pb-4">
               <ExportCard
                 ref={cardRef}
-                title="취향 비교"
+                title="Taste compare"
                 subtitle={data.friends.map((f) => f.nicknameLabel).join(" · ")}
                 body={exportBody}
                 footer="tastetape — compare"
@@ -313,9 +320,9 @@ export function ComparePage() {
             <button
               type="button"
               onClick={downloadPng}
-              className="rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 shadow-sm hover:bg-stone-50"
+              className="rounded-xl border-2 border-black bg-white px-4 py-2 text-sm font-extrabold text-black shadow-[3px_3px_0_0_var(--color-tape-lime)] hover:bg-[var(--color-tape-lime-soft)]"
             >
-              PNG 다운로드
+              Download PNG
             </button>
           </div>
         )}

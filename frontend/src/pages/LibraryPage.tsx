@@ -26,7 +26,7 @@ export function LibraryPage() {
     if (!token) return;
     setLoadingList(true);
     refresh()
-      .catch((e) => setErr(e instanceof Error ? e.message : "목록 오류"))
+      .catch((e) => setErr(e instanceof Error ? e.message : "Could not load list"))
       .finally(() => setLoadingList(false));
   }, [token, refresh]);
 
@@ -39,7 +39,7 @@ export function LibraryPage() {
       const { works } = await api.search(query.trim(), mediaType);
       setResults(works);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "검색 실패");
+      setErr(e instanceof Error ? e.message : "Search failed");
     } finally {
       setSearching(false);
     }
@@ -59,7 +59,7 @@ export function LibraryPage() {
       setResults([]);
       setQuery("");
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "추가 실패");
+      setErr(e instanceof Error ? e.message : "Could not add");
     }
   }
 
@@ -80,7 +80,7 @@ export function LibraryPage() {
 
   async function remove(id: string) {
     if (!token) return;
-    if (!confirm("이 작품을 목록에서 제거할까요?")) return;
+    if (!confirm("Remove this title from your list?")) return;
     await api.deleteWork(token, id);
     await refresh();
   }
@@ -92,40 +92,40 @@ export function LibraryPage() {
     <Layout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold">내 취향 테이프</h1>
-          <p className="mt-1 text-sm text-[var(--color-tape-muted)]">
-            최소 <strong>9개</strong> 이상 평가하면 분석이 안정적입니다. 현재{" "}
-            <strong>{count}</strong>개 · 내 친구 코드:{" "}
-            <code className="rounded bg-stone-200/80 px-1.5 py-0.5 text-xs font-semibold">
+          <h1 className="text-2xl font-extrabold text-black">My taste tape</h1>
+          <p className="mt-1 text-sm font-semibold text-[var(--color-tape-muted)]">
+            Rate at least <strong className="text-black">9</strong> titles for stable analysis.
+            You have <strong className="text-black">{count}</strong> · friend code:{" "}
+            <code className="rounded-md bg-[var(--color-tape-lime-soft)] px-1.5 py-0.5 text-xs font-bold text-black">
               {user?.friendCode}
             </code>
           </p>
           {!minMet && (
-            <p className="mt-2 text-sm text-amber-800">
-              아직 {9 - count}개 더 필요해요.
+            <p className="mt-2 text-sm font-bold text-black">
+              Add {9 - count} more to unlock solid recommendations.
             </p>
           )}
         </div>
 
-        <section className="rounded-2xl border border-stone-200/80 bg-[var(--color-tape-card)] p-6 shadow-sm">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-            작품 검색 후 추가
+        <section className="rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
+          <h2 className="text-sm font-extrabold uppercase tracking-wide text-black">
+            Search & add
           </h2>
           <form onSubmit={runSearch} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex gap-2">
               {(
                 [
-                  ["movie", "영화"],
+                  ["movie", "Film"],
                   ["tv", "TV"],
-                  ["book", "책"],
+                  ["book", "Book"],
                 ] as const
               ).map(([v, label]) => (
                 <label
                   key={v}
-                  className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-semibold ${
+                  className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-extrabold ${
                     mediaType === v
-                      ? "bg-[var(--color-tape-accent)] text-white"
-                      : "bg-stone-100 text-stone-600"
+                      ? "bg-[var(--color-tape-lime)] text-black shadow-[2px_2px_0_0_#000]"
+                      : "bg-white text-[var(--color-tape-muted)] ring-2 ring-black/10"
                   }`}
                 >
                   <input
@@ -140,15 +140,17 @@ export function LibraryPage() {
               ))}
             </div>
             <input
-              className="min-w-0 flex-1 rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
-              placeholder="제목 검색…"
+              className="min-w-0 flex-1 rounded-xl border-2 border-black/15 bg-white px-3 py-2 text-sm font-semibold text-black"
+              placeholder="Search by title…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
             <div className="flex items-center gap-2">
-              <label className="text-xs text-stone-500">별점</label>
+              <label className="text-xs font-bold text-[var(--color-tape-muted)]">
+                Stars
+              </label>
               <select
-                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm"
+                className="rounded-lg border-2 border-black/15 bg-white px-2 py-1.5 text-sm font-bold text-black"
                 value={addRating}
                 onChange={(e) => setAddRating(Number(e.target.value))}
               >
@@ -162,35 +164,35 @@ export function LibraryPage() {
             <button
               type="submit"
               disabled={searching}
-              className="rounded-xl bg-stone-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="rounded-xl bg-black px-4 py-2 text-sm font-extrabold text-[var(--color-tape-lime)] shadow-[3px_3px_0_0_var(--color-tape-lime)] disabled:opacity-60"
             >
-              {searching ? "검색…" : "검색"}
+              {searching ? "Searching…" : "Search"}
             </button>
           </form>
           {err && (
-            <p className="mt-3 text-sm text-red-600" role="alert">
+            <p className="mt-3 text-sm font-semibold text-red-600" role="alert">
               {err}
             </p>
           )}
           {results.length > 0 && (
-            <ul className="mt-4 max-h-72 space-y-2 overflow-y-auto rounded-xl border border-stone-100 bg-white/80 p-2">
+            <ul className="mt-4 max-h-72 space-y-2 overflow-y-auto rounded-xl border-2 border-black/10 bg-white p-2">
               {results.map((w) => (
                 <li
                   key={`${w.externalRef.provider}-${w.externalRef.id}-${w.mediaType}`}
-                  className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-stone-50"
+                  className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-[var(--color-tape-lime-soft)]"
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-medium">{w.title}</p>
-                    <p className="text-xs text-stone-500">
-                      {w.mediaType} · {w.year ?? "연도 미상"}
+                    <p className="truncate font-bold text-black">{w.title}</p>
+                    <p className="text-xs font-semibold text-[var(--color-tape-muted)]">
+                      {w.mediaType} · {w.year ?? "Year unknown"}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => addSelected(w)}
-                    className="shrink-0 rounded-lg bg-[var(--color-tape-accent)] px-3 py-1.5 text-xs font-semibold text-white"
+                    className="shrink-0 rounded-lg bg-[var(--color-tape-lime)] px-3 py-1.5 text-xs font-extrabold text-black shadow-[2px_2px_0_0_#000]"
                   >
-                    추가
+                    Add
                   </button>
                 </li>
               ))}
@@ -200,71 +202,73 @@ export function LibraryPage() {
 
         <section>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">평가한 작품</h2>
+            <h2 className="text-lg font-extrabold text-black">Rated titles</h2>
             <Link
               to="/analyze"
-              className="rounded-xl bg-[var(--color-tape-accent)] px-4 py-2 text-sm font-semibold text-white shadow hover:opacity-95"
+              className="rounded-xl bg-[var(--color-tape-lime)] px-4 py-2 text-sm font-extrabold text-black shadow-[3px_3px_0_0_#000] hover:brightness-95"
             >
-              취향 분석으로
+              Taste analysis
             </Link>
           </div>
           {loadingList ? (
-            <p className="text-sm text-stone-500">불러오는 중…</p>
+            <p className="text-sm font-semibold text-[var(--color-tape-muted)]">Loading…</p>
           ) : list.length === 0 ? (
-            <p className="text-sm text-stone-500">아직 없습니다. 위에서 추가해 보세요.</p>
+            <p className="text-sm font-semibold text-[var(--color-tape-muted)]">
+              Nothing here yet — add titles above.
+            </p>
           ) : (
             <ul className="space-y-3">
               {list.map((row) => (
                 <li
                   key={row.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-stone-200/80 bg-white/90 p-4 shadow-sm"
+                  className="flex flex-col gap-3 rounded-2xl border-2 border-black/10 bg-white p-4 shadow-[3px_3px_0_0_rgba(0,0,0,0.06)]"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  {row.work.posterOrCoverUrl && (
-                    <img
-                      src={row.work.posterOrCoverUrl}
-                      alt=""
-                      className="h-24 w-16 shrink-0 rounded-lg object-cover"
-                    />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold">{row.work.title}</p>
-                    <p className="text-xs text-stone-500">
-                      {row.work.mediaType}
-                      {row.work.year != null ? ` · ${row.work.year}` : ""}
-                    </p>
+                    {row.work.posterOrCoverUrl && (
+                      <img
+                        src={row.work.posterOrCoverUrl}
+                        alt=""
+                        className="h-24 w-16 shrink-0 rounded-lg object-cover ring-2 ring-black/10"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-extrabold text-black">{row.work.title}</p>
+                      <p className="text-xs font-semibold text-[var(--color-tape-muted)]">
+                        {row.work.mediaType}
+                        {row.work.year != null ? ` · ${row.work.year}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <select
+                        className="rounded-lg border-2 border-black/15 bg-white px-2 py-1.5 text-sm font-bold text-black"
+                        value={row.rating}
+                        onChange={(e) =>
+                          updateRating(row.id, Number(e.target.value))
+                        }
+                      >
+                        {[5, 4, 3, 2, 1].map((n) => (
+                          <option key={n} value={n}>
+                            ★ {n}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        className="text-xs font-bold text-[var(--color-tape-muted)] hover:text-red-600"
+                        onClick={() => remove(row.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <select
-                      className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm"
-                      value={row.rating}
-                      onChange={(e) =>
-                        updateRating(row.id, Number(e.target.value))
-                      }
-                    >
-                      {[5, 4, 3, 2, 1].map((n) => (
-                        <option key={n} value={n}>
-                          ★ {n}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      className="text-xs text-stone-400 hover:text-red-600"
-                      onClick={() => remove(row.id)}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                  </div>
-                  <label className="w-full text-xs text-stone-500">
-                    호불호 메모 (선택, 최대 300자)
+                  <label className="w-full text-xs font-bold text-[var(--color-tape-muted)]">
+                    Note (optional, max 300 chars)
                     <textarea
-                      className="mt-1 w-full rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm text-stone-800"
+                      className="mt-1 w-full rounded-lg border-2 border-black/15 bg-white px-2 py-1.5 text-sm font-medium text-black"
                       rows={2}
                       maxLength={300}
                       defaultValue={row.preferenceNote ?? ""}
-                      placeholder="왜 이 점수를 줬는지 짧게 적어 주세요."
+                      placeholder="Why this rating? Short note."
                       onBlur={(e) => {
                         const v = e.target.value.trim();
                         const prev = (row.preferenceNote ?? "").trim();

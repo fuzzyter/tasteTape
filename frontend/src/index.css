@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --color-tape-ink: #0f1419;
-  --color-tape-bg: #f4f0e8;
-  --color-tape-accent: #c45c3e;
-  --color-tape-muted: #5c6670;
-  --color-tape-card: #fffdf8;
+  --font-sans: "Outfit", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-tape-ink: #0a0a0a;
+  --color-tape-bg: #f7ffe8;
+  --color-tape-lime: #c4f031;
+  --color-tape-lime-soft: #e8f99a;
+  --color-tape-accent: #c4f031;
+  --color-tape-muted: #3d3d3d;
+  --color-tape-card: #ffffff;
 }
 
 html {
@@ -17,11 +19,41 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: var(--font-sans);
-  background: radial-gradient(1200px 600px at 10% -10%, #fde8dc 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, #e8eef8 0%, transparent 50%), var(--color-tape-bg);
+  font-weight: 600;
+  background:
+    radial-gradient(1000px 520px at 8% -8%, var(--color-tape-lime-soft) 0%, transparent 55%),
+    radial-gradient(800px 480px at 100% 0%, #d4f87a 0%, transparent 48%),
+    var(--color-tape-bg);
   color: var(--color-tape-ink);
 }
 
 #root {
   min-height: 100vh;
+}
+
+@keyframes analyze-dot-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.analyze-bounce-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-tape-ink);
+  animation: analyze-dot-bounce 0.55s ease-in-out infinite;
+}
+
+.analyze-bounce-dot:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.analyze-bounce-dot:nth-child(3) {
+  animation-delay: 0.24s;
 }

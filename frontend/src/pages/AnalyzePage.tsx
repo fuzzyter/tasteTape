@@ -24,8 +24,8 @@ function MediaRow({
   extra: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-3 rounded-xl border border-stone-100 bg-white/95 p-3">
-      <div className="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-stone-200">
+    <div className="flex gap-3 rounded-xl border-2 border-black/10 bg-white p-3 shadow-sm">
+      <div className="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-stone-200 ring-1 ring-black/10">
         {work.posterOrCoverUrl ? (
           <img
             src={work.posterOrCoverUrl}
@@ -33,16 +33,16 @@ function MediaRow({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center p-1 text-center text-[10px] leading-tight text-stone-700">
+          <div className="flex h-full w-full items-center justify-center p-1 text-center text-[10px] font-bold leading-tight text-black">
             <TitleOneLine text={work.title} max={48} />
           </div>
         )}
       </div>
       <div className="min-w-0 flex-1 text-sm">
-        <p className="font-semibold leading-snug">
+        <p className="font-extrabold leading-snug text-black">
           <TitleOneLine text={work.title} max={60} />
         </p>
-        <p className="text-xs text-stone-500">
+        <p className="text-xs font-semibold text-[var(--color-tape-muted)]">
           {work.mediaType.toUpperCase()}
           {work.year != null ? ` · ${work.year}` : ""}
         </p>
@@ -90,7 +90,7 @@ export function AnalyzePage() {
       const sn = await api.snapshots(token);
       setSnapshots(sn.snapshots);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "분석 실패");
+      setErr(e instanceof Error ? e.message : "Analysis failed");
     } finally {
       setLoading(false);
     }
@@ -117,40 +117,40 @@ export function AnalyzePage() {
   }
 
   const exportBody = data
-    ? `${data.analysis.tasteSummary}\n\n키워드: ${data.analysis.keywords.join(", ")}\n\n${data.analysis.recommendationBlurb}`
+    ? `${data.analysis.tasteSummary}\n\nKeywords: ${data.analysis.keywords.join(", ")}\n\n${data.analysis.recommendationBlurb}`
     : "";
 
   return (
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">내 취향 분석</h1>
-          <p className="mt-1 text-sm text-[var(--color-tape-muted)]">
-            데이터 통계는 AI 없이 계산됩니다. 요약·추천은 Gemini를 사용합니다.
+          <h1 className="text-2xl font-extrabold text-black">Taste analysis</h1>
+          <p className="mt-1 text-sm font-semibold text-[var(--color-tape-muted)]">
+            Build your own RECAP and find your TASTE
           </p>
         </div>
 
-        <section className="rounded-2xl border border-stone-200/80 bg-[var(--color-tape-card)] p-4">
-          <h2 className="text-sm font-semibold text-stone-700">추천 후보 필터</h2>
+        <section className="rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-4 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
+          <h2 className="text-sm font-extrabold text-black">Recommendation filters</h2>
           <div className="mt-3 flex flex-wrap gap-4">
-            <label className="text-xs text-stone-600">
-              최소 연도
+            <label className="text-xs font-bold text-[var(--color-tape-muted)]">
+              Min year
               <input
                 type="number"
-                className="ml-2 w-24 rounded border border-stone-200 px-2 py-1 text-sm"
-                placeholder="예: 2010"
+                className="ml-2 w-24 rounded-lg border-2 border-black/15 px-2 py-1 text-sm font-semibold text-black"
+                placeholder="e.g. 2010"
                 value={yearMin}
                 onChange={(e) =>
                   setYearMin(e.target.value === "" ? "" : Number(e.target.value))
                 }
               />
             </label>
-            <label className="text-xs text-stone-600">
-              최대 연도
+            <label className="text-xs font-bold text-[var(--color-tape-muted)]">
+              Max year
               <input
                 type="number"
-                className="ml-2 w-24 rounded border border-stone-200 px-2 py-1 text-sm"
-                placeholder="예: 2024"
+                className="ml-2 w-24 rounded-lg border-2 border-black/15 px-2 py-1 text-sm font-semibold text-black"
+                placeholder="e.g. 2024"
                 value={yearMax}
                 onChange={(e) =>
                   setYearMax(e.target.value === "" ? "" : Number(e.target.value))
@@ -158,10 +158,10 @@ export function AnalyzePage() {
               />
             </label>
           </div>
-          <div className="mt-3 flex flex-wrap gap-3 text-sm">
+          <div className="mt-3 flex flex-wrap gap-3 text-sm font-bold text-black">
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={movie} onChange={(e) => setMovie(e.target.checked)} />
-              영화
+              Film
             </label>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={tv} onChange={(e) => setTv(e.target.checked)} />
@@ -169,42 +169,55 @@ export function AnalyzePage() {
             </label>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={book} onChange={(e) => setBook(e.target.checked)} />
-              책
+              Book
             </label>
           </div>
-          <label className="mt-3 flex items-center gap-2 text-sm text-stone-600">
+          <label className="mt-3 flex items-center gap-2 text-sm font-bold text-[var(--color-tape-muted)]">
             <input
               type="checkbox"
               checked={saveSnap}
               onChange={(e) => setSaveSnap(e.target.checked)}
             />
-            결과를 히스토리에 저장
+            Save result to history
           </label>
         </section>
 
-        <button
-          type="button"
-          onClick={run}
-          disabled={loading}
-          className="rounded-xl bg-[var(--color-tape-accent)] px-5 py-2.5 text-sm font-semibold text-white shadow disabled:opacity-60"
-        >
-          {loading ? "분석 중…" : "분석 실행"}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={run}
+            disabled={loading}
+            className="rounded-xl bg-[var(--color-tape-lime)] px-5 py-2.5 text-sm font-extrabold text-black shadow-[4px_4px_0_0_#000] hover:brightness-95 disabled:opacity-60"
+          >
+            {loading ? "Analyzing…" : "Run analysis"}
+          </button>
+          {loading && (
+            <span
+              className="inline-flex h-6 items-end gap-1 pb-0.5"
+              role="status"
+              aria-label="Loading"
+            >
+              <span className="analyze-bounce-dot" />
+              <span className="analyze-bounce-dot" />
+              <span className="analyze-bounce-dot" />
+            </span>
+          )}
+        </div>
         {err && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm font-semibold text-red-600" role="alert">
             {err}
           </p>
         )}
 
         {snapshots.length > 0 && (
-          <div className="rounded-xl border border-stone-200 bg-white/80 p-3 text-sm">
-            <p className="font-medium text-stone-700">저장된 분석 불러오기</p>
+          <div className="rounded-xl border-2 border-black/10 bg-white p-3 text-sm shadow-sm">
+            <p className="font-extrabold text-black">Saved analyses</p>
             <ul className="mt-2 flex flex-wrap gap-2">
               {snapshots.filter((s) => s.kind === "analyze").map((s) => (
                 <li key={s.id}>
                   <button
                     type="button"
-                    className="rounded-lg bg-stone-100 px-2 py-1 text-xs hover:bg-stone-200"
+                    className="rounded-lg bg-[var(--color-tape-lime-soft)] px-2 py-1 text-xs font-extrabold text-black hover:brightness-95"
                     onClick={() => loadSnapshot(s.id)}
                   >
                     {s.label ?? s.id.slice(0, 8)}
@@ -217,21 +230,21 @@ export function AnalyzePage() {
 
         {data && (
           <div className="space-y-8">
-            <section className="rounded-2xl border border-stone-200/80 bg-white/90 p-6">
-              <h2 className="text-lg font-semibold">데이터 통계 (AI 없음)</h2>
+            <section className="rounded-2xl border-2 border-black/10 bg-white p-6 shadow-[3px_3px_0_0_rgba(0,0,0,0.06)]">
+              <h2 className="text-lg font-extrabold text-black">Stats (no AI)</h2>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[280px] text-left text-sm">
                   <thead>
-                    <tr className="border-b text-stone-500">
-                      <th className="py-1 pr-2">타입</th>
-                      <th className="py-1 pr-2">개수</th>
-                      <th className="py-1">평균 별점</th>
+                    <tr className="border-b-2 border-black/10 font-bold text-[var(--color-tape-muted)]">
+                      <th className="py-1 pr-2">Type</th>
+                      <th className="py-1 pr-2">Count</th>
+                      <th className="py-1">Avg rating</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.stats.byMedia.map((r) => (
-                      <tr key={r.mediaType} className="border-b border-stone-100">
-                        <td className="py-1">{r.mediaType}</td>
+                      <tr key={r.mediaType} className="border-b border-black/5 font-semibold">
+                        <td className="py-1 text-black">{r.mediaType}</td>
                         <td className="py-1">{r.count}</td>
                         <td className="py-1">{r.avgRating}</td>
                       </tr>
@@ -239,47 +252,45 @@ export function AnalyzePage() {
                   </tbody>
                 </table>
               </div>
-              <p className="mt-4 text-xs font-medium text-stone-600">별점 분포</p>
-              <div className="mt-1 flex gap-2 text-xs">
+              <p className="mt-4 text-xs font-extrabold text-black">Star spread</p>
+              <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-[var(--color-tape-muted)]">
                 {[5, 4, 3, 2, 1].map((s) => (
                   <span key={s}>
                     ★{s}: {data.stats.ratingHistogram[s] ?? 0}
                   </span>
                 ))}
               </div>
-              <p className="mt-4 text-xs font-medium text-stone-600">
-                장르 평균 (상위)
-              </p>
-              <ul className="mt-1 text-xs text-stone-700">
+              <p className="mt-4 text-xs font-extrabold text-black">Top genres (by avg)</p>
+              <ul className="mt-1 text-xs font-semibold text-[var(--color-tape-muted)]">
                 {data.stats.topGenresByAvg.slice(0, 6).map((g) => (
                   <li key={g.genre}>
-                    {g.genre}: {g.avgRating} ({g.count}작)
+                    {g.genre}: {g.avgRating} ({g.count} titles)
                   </li>
                 ))}
               </ul>
             </section>
 
             <div className="grid gap-8 lg:grid-cols-2">
-              <div className="space-y-4 rounded-2xl border border-stone-200/80 bg-[var(--color-tape-card)] p-6">
-                <h2 className="text-lg font-semibold">AI 요약</h2>
-                <p className="text-sm leading-relaxed text-stone-800">
+              <div className="space-y-4 rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
+                <h2 className="text-lg font-extrabold text-black">AI summary</h2>
+                <p className="text-sm font-medium leading-relaxed text-black">
                   {data.analysis.tasteSummary}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {data.analysis.keywords.map((k) => (
                     <span
                       key={k}
-                      className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-700"
+                      className="rounded-full bg-[var(--color-tape-lime-soft)] px-2.5 py-0.5 text-xs font-extrabold text-black ring-1 ring-black/10"
                     >
                       {k}
                     </span>
                   ))}
                 </div>
-                <p className="text-sm text-stone-600">
+                <p className="text-sm font-semibold text-[var(--color-tape-muted)]">
                   {data.analysis.recommendationBlurb}
                 </p>
-                <h3 className="pt-2 text-sm font-semibold text-stone-700">
-                  추천 (메타 + AI 코멘트)
+                <h3 className="pt-2 text-sm font-extrabold text-black">
+                  Picks (metadata + AI notes)
                 </h3>
                 <ul className="space-y-4">
                   {data.recommendations.ranked.map((r, i) => (
@@ -288,15 +299,15 @@ export function AnalyzePage() {
                         work={r.work}
                         extra={
                           <>
-                            <p className="mt-1 text-xs text-stone-500">
-                              점수 {r.score}
+                            <p className="mt-1 text-xs font-bold text-[var(--color-tape-muted)]">
+                              Score {r.score}
                             </p>
-                            <ul className="mt-1 list-inside list-disc text-xs text-stone-600">
+                            <ul className="mt-1 list-inside list-disc text-xs font-medium text-[var(--color-tape-muted)]">
                               {r.reasons.map((x) => (
                                 <li key={x}>{x}</li>
                               ))}
                             </ul>
-                            <p className="mt-2 text-xs leading-relaxed text-stone-800">
+                            <p className="mt-2 text-xs font-medium leading-relaxed text-black">
                               {r.aiComment}
                             </p>
                           </>
@@ -308,14 +319,14 @@ export function AnalyzePage() {
               </div>
 
               <div className="space-y-4">
-                <p className="text-sm text-stone-500">
-                  SNS용 이미지로 내보내기 (아래 카드가 캡처됩니다).
+                <p className="text-sm font-semibold text-[var(--color-tape-muted)]">
+                  Export a share image (captures the card below).
                 </p>
                 <div className="overflow-x-auto pb-4">
                   <ExportCard
                     ref={cardRef}
-                    title="나의 취향 요약"
-                    subtitle={`평균 ${data.profile.avgRating}점 · ${data.profile.totalRated}작`}
+                    title="My taste snapshot"
+                    subtitle={`Avg ${data.profile.avgRating} · ${data.profile.totalRated} titles`}
                     body={exportBody}
                     footer="tastetape — API & AI taste curation"
                   />
@@ -323,9 +334,9 @@ export function AnalyzePage() {
                 <button
                   type="button"
                   onClick={downloadPng}
-                  className="rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 shadow-sm hover:bg-stone-50"
+                  className="rounded-xl border-2 border-black bg-white px-4 py-2 text-sm font-extrabold text-black shadow-[3px_3px_0_0_var(--color-tape-lime)] hover:bg-[var(--color-tape-lime-soft)]"
                 >
-                  PNG 다운로드
+                  Download PNG
                 </button>
               </div>
             </div>

@@ -300,7 +300,7 @@ export const meRoutes: FastifyPluginAsync = async (app) => {
         data: {
           userId: request.user!.sub,
           kind: "analyze",
-          label: `분석 ${new Date().toISOString().slice(0, 16)}`,
+          label: `Analyze ${new Date().toISOString().slice(0, 16)}`,
           payload: payload as object,
         },
       });

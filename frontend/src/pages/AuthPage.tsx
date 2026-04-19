@@ -23,7 +23,7 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
       setSession(res.token, res.user);
       nav("/", { replace: true });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "오류");
+      setErr(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -31,20 +31,20 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
-      <div className="rounded-2xl border border-stone-200/80 bg-[var(--color-tape-card)] p-8 shadow-xl shadow-stone-900/5">
-        <h1 className="text-2xl font-bold tracking-tight text-[var(--color-tape-ink)]">
+      <div className="rounded-2xl border-[3px] border-black bg-[var(--color-tape-card)] p-8 shadow-[8px_8px_0_0_rgba(0,0,0,0.85)]">
+        <h1 className="text-2xl font-extrabold tracking-tight text-[var(--color-tape-ink)]">
           TasteTape
         </h1>
-        <p className="mt-1 text-sm text-[var(--color-tape-muted)]">
-          {mode === "login" ? "로그인" : "회원가입"}
+        <p className="mt-1 text-sm font-semibold text-[var(--color-tape-muted)]">
+          {mode === "login" ? "Sign in" : "Create account"}
         </p>
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-              이메일
+            <label className="text-xs font-extrabold uppercase tracking-wide text-black">
+              Email
             </label>
             <input
-              className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm outline-none ring-[var(--color-tape-accent)] focus:ring-2"
+              className="mt-1 w-full rounded-xl border-2 border-black/15 bg-white px-3 py-2 text-sm font-medium text-black outline-none ring-[var(--color-tape-lime)] focus:border-black focus:ring-2"
               type="email"
               autoComplete="email"
               value={email}
@@ -53,11 +53,11 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
             />
           </div>
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-              비밀번호
+            <label className="text-xs font-extrabold uppercase tracking-wide text-black">
+              Password
             </label>
             <input
-              className="mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm outline-none ring-[var(--color-tape-accent)] focus:ring-2"
+              className="mt-1 w-full rounded-xl border-2 border-black/15 bg-white px-3 py-2 text-sm font-medium text-black outline-none ring-[var(--color-tape-lime)] focus:border-black focus:ring-2"
               type="password"
               autoComplete={
                 mode === "login" ? "current-password" : "new-password"
@@ -69,37 +69,41 @@ export function AuthPage({ mode }: { mode: "login" | "register" }) {
             />
           </div>
           {err && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm font-semibold text-red-600" role="alert">
               {err}
             </p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-[var(--color-tape-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:opacity-95 disabled:opacity-60"
+            className="w-full rounded-xl bg-[var(--color-tape-lime)] px-4 py-2.5 text-sm font-extrabold text-black shadow-[4px_4px_0_0_#000] transition hover:brightness-95 disabled:opacity-60"
           >
-            {loading ? "처리 중…" : mode === "login" ? "로그인" : "가입하기"}
+            {loading
+              ? "Working…"
+              : mode === "login"
+                ? "Sign in"
+                : "Create account"}
           </button>
         </form>
-        <p className="mt-6 text-center text-sm text-[var(--color-tape-muted)]">
+        <p className="mt-6 text-center text-sm font-semibold text-[var(--color-tape-muted)]">
           {mode === "login" ? (
             <>
-              계정이 없나요?{" "}
+              No account?{" "}
               <Link
-                className="font-semibold text-[var(--color-tape-accent)]"
+                className="font-extrabold text-black underline decoration-[var(--color-tape-lime)] decoration-2 underline-offset-2"
                 to="/register"
               >
-                회원가입
+                Register
               </Link>
             </>
           ) : (
             <>
-              이미 계정이 있나요?{" "}
+              Already have an account?{" "}
               <Link
-                className="font-semibold text-[var(--color-tape-accent)]"
+                className="font-extrabold text-black underline decoration-[var(--color-tape-lime)] decoration-2 underline-offset-2"
                 to="/login"
               >
-                로그인
+                Sign in
               </Link>
             </>
           )}

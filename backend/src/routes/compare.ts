@@ -17,14 +17,14 @@ import { prisma } from "../lib/prisma.js";
 import type { NormalizedWork } from "../types/normalized-work.js";
 
 const compareBody = z.object({
-  friendCodes: z.array(z.string().min(4)).min(1).max(4),
+  friendCodes: z.array(z.string().min(4)).min(1).max(3),
   save: z.boolean().optional(),
 });
 
 function nick(u: { nickname: string | null; friendCode: string }) {
   const n = u.nickname?.trim();
-  if (n) return `${n}님`;
-  return `테이퍼${u.friendCode.slice(-4)}님`;
+  if (n) return n;
+  return `Taper${u.friendCode.slice(-4)}`;
 }
 
 function workKey(provider: string, externalId: string, mediaType: string) {
@@ -34,7 +34,6 @@ function workKey(provider: string, externalId: string, mediaType: string) {
 const PLACEHOLDER_PARAGRAPH =
   "The model did not return a detailed comparison. Check ratings, notes, and genre overlap yourself.";
 
-/** AI가 환각한 provider/id 조합 제거: 반드시 실제 목록(ref)에 있는 작품만 유지 */
 function strictFilterComparePicks(
   result: MultiCompareResult,
   myRated: RatedRef[],
@@ -160,7 +159,7 @@ export const compareRoutes: FastifyPluginAsync = async (app) => {
         ...new Set(
           body.data.friendCodes.map((c) => c.trim().toUpperCase()).filter(Boolean)
         ),
-      ].slice(0, 4);
+      ].slice(0, 3);
 
       const friends: Array<{
         user: { id: string; nickname: string | null; friendCode: string };
@@ -172,15 +171,15 @@ export const compareRoutes: FastifyPluginAsync = async (app) => {
           where: { friendCode: code },
         });
         if (!f) {
-          return reply.status(404).send({ error: `친구 코드를 찾을 수 없음: ${code}` });
+          return reply.status(404).send({ error: `Friend code not found: ${code}` });
         }
         if (f.id === meId) {
-          return reply.status(400).send({ error: "자기 자신과는 비교할 수 없습니다" });
+          return reply.status(400).send({ error: "You cannot compare with yourself" });
         }
         if (!f.comparePublic) {
           return reply
             .status(403)
-            .send({ error: `${code}: 상대가 친구 검색을 비공개로 설정했습니다` });
+            .send({ error: `${code}: This user has disabled compare-by-code` });
         }
         friends.push({ user: f, label: nick(f) });
       }
@@ -288,7 +287,7 @@ export const compareRoutes: FastifyPluginAsync = async (app) => {
           data: {
             userId: meId,
             kind: "compare",
-            label: `비교 ${new Date().toISOString().slice(0, 16)}`,
+            label: `Compare ${new Date().toISOString().slice(0, 16)}`,
             payload: response as object,
           },
         });

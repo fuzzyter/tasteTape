@@ -1,5 +1,13 @@
-import type { MediaType } from "@prisma/client";
+import type { MediaType, WorkCache } from "@prisma/client";
 import { prisma } from "./prisma.js";
+
+
+type UserWorkRatingWithWorkCache = {
+  rating: number;
+  reviewText: string | null;
+  preferenceNote: string | null;
+  workCache: WorkCache;
+};
 
 export type TasteProfileJson = {
   summary: {
@@ -25,11 +33,11 @@ export type TasteProfileJson = {
 };
 
 export async function buildTasteProfile(userId: string): Promise<TasteProfileJson> {
-  const ratings = await prisma.userWorkRating.findMany({
+  const ratings = (await prisma.userWorkRating.findMany({
     where: { userId },
     include: { workCache: true },
     orderBy: { rating: "desc" },
-  });
+  })) as unknown as UserWorkRatingWithWorkCache[];
 
   const items = ratings.map((r) => ({
     title: r.workCache.title,
@@ -83,13 +91,12 @@ export async function buildTasteProfile(userId: string): Promise<TasteProfileJso
   };
 }
 
-/** For compare: works with refs for AI to pick exact items */
 export async function buildRatedWorksRefs(userId: string, minRating = 3) {
-  const rows = await prisma.userWorkRating.findMany({
+  const rows = (await prisma.userWorkRating.findMany({
     where: { userId, rating: { gte: minRating } },
     include: { workCache: true },
     orderBy: { rating: "desc" },
-  });
+  })) as unknown as UserWorkRatingWithWorkCache[];
   return rows.map((r) => ({
     rating: r.rating,
     preferenceNote: r.preferenceNote,
