@@ -8,8 +8,13 @@ import {
   type WorkCard,
 } from "../api";
 import { useAuth } from "../auth";
-import { ExportCard } from "../components/ExportCard";
 import { Layout } from "../components/Layout";
+import {
+  PostersRecap,
+  ReceiptRecap,
+  SinglePickCard,
+  StatsRecap,
+} from "../components/recap/Recap";
 
 function TitleOneLine({ text, max = 36 }: { text: string; max?: number }) {
   const t = text.length > max ? `${text.slice(0, max)}…` : text;
@@ -52,12 +57,23 @@ function MediaRow({
   );
 }
 
+async function captureToPng(node: HTMLElement, filename: string) {
+  const dataUrl = await htmlToImage.toPng(node, {
+    pixelRatio: 2,
+    cacheBust: true,
+    backgroundColor: "#ffffff",
+  });
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = filename;
+  a.click();
+}
+
 export function AnalyzePage() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [data, setData] = useState<AnalyzeResponse | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
   const [yearMin, setYearMin] = useState<number | "">("");
   const [yearMax, setYearMax] = useState<number | "">("");
   const [movie, setMovie] = useState(true);
@@ -65,6 +81,14 @@ export function AnalyzePage() {
   const [book, setBook] = useState(true);
   const [saveSnap, setSaveSnap] = useState(false);
   const [snapshots, setSnapshots] = useState<SnapshotMeta[]>([]);
+  const [exporting, setExporting] = useState<string | null>(null);
+  const [singlePickIdx, setSinglePickIdx] = useState<number | null>(null);
+
+  const topPostersRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const recommendedPostersRef = useRef<HTMLDivElement>(null);
+  const singlePickRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -115,21 +139,43 @@ export function AnalyzePage() {
     }
   }
 
-  async function downloadPng() {
-    if (!cardRef.current) return;
-    const dataUrl = await htmlToImage.toPng(cardRef.current, {
-      pixelRatio: 2,
-      cacheBust: true,
-    });
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = "tastetape-analysis.png";
-    a.click();
+  async function exportNode(
+    key: string,
+    node: HTMLElement | null,
+    filename: string
+  ) {
+    if (!node) return;
+    setExporting(key);
+    setErr(null);
+    try {
+      await captureToPng(node, filename);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setExporting(null);
+    }
   }
 
-  const exportBody = data
-    ? `${data.analysis.tasteSummary}\n\nKeywords: ${data.analysis.keywords.join(", ")}\n\n${data.analysis.recommendationBlurb}`
-    : "";
+  async function exportSinglePick(idx: number) {
+    setSinglePickIdx(idx);
+    setExporting(`pick-${idx}`);
+    setErr(null);
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    try {
+      if (singlePickRef.current) {
+        await captureToPng(
+          singlePickRef.current,
+          `tastetape-pick-${idx + 1}.png`
+        );
+      }
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setExporting(null);
+      setSinglePickIdx(null);
+    }
+  }
 
   return (
     <Layout>
@@ -256,7 +302,39 @@ export function AnalyzePage() {
         {data && (
           <div className="space-y-8">
             <section className="rounded-2xl border-2 border-black/10 bg-white p-6 shadow-[3px_3px_0_0_rgba(0,0,0,0.06)]">
-              <h2 className="text-lg font-extrabold text-black">Stats (no AI)</h2>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-extrabold text-black">Stats (no AI)</h2>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={exporting !== null}
+                    onClick={() =>
+                      exportNode(
+                        "topworks",
+                        topPostersRef.current,
+                        "tastetape-top-works.png"
+                      )
+                    }
+                    className="rounded-lg border-2 border-black bg-white px-3 py-1.5 text-xs font-extrabold text-black shadow-[2px_2px_0_0_var(--color-tape-lime)] hover:bg-[var(--color-tape-lime-soft)] disabled:opacity-60"
+                  >
+                    {exporting === "topworks" ? "Saving…" : "Share top works"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={exporting !== null}
+                    onClick={() =>
+                      exportNode(
+                        "stats",
+                        statsRef.current,
+                        "tastetape-stats.png"
+                      )
+                    }
+                    className="rounded-lg bg-black px-3 py-1.5 text-xs font-extrabold text-[var(--color-tape-lime)] shadow-[2px_2px_0_0_var(--color-tape-lime)] hover:brightness-95 disabled:opacity-60"
+                  >
+                    {exporting === "stats" ? "Saving…" : "Share stats recap"}
+                  </button>
+                </div>
+              </div>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[280px] text-left text-sm">
                   <thead>
@@ -295,79 +373,157 @@ export function AnalyzePage() {
               </ul>
             </section>
 
-            <div className="grid gap-8 lg:grid-cols-2">
-              <div className="min-w-0 space-y-4 rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
+            <section className="space-y-4 rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-extrabold text-black">AI summary</h2>
-                <p className="text-sm font-medium leading-relaxed text-black">
-                  {data.analysis.tasteSummary}
-                </p>
                 <div className="flex flex-wrap gap-2">
-                  {data.analysis.keywords.map((k) => (
-                    <span
-                      key={k}
-                      className="rounded-full bg-[var(--color-tape-lime-soft)] px-2.5 py-0.5 text-xs font-extrabold text-black ring-1 ring-black/10"
-                    >
-                      {k}
-                    </span>
-                  ))}
+                  <button
+                    type="button"
+                    disabled={exporting !== null}
+                    onClick={() =>
+                      exportNode(
+                        "receipt",
+                        receiptRef.current,
+                        "tastetape-receipt.png"
+                      )
+                    }
+                    className="rounded-lg border-2 border-black bg-white px-3 py-1.5 text-xs font-extrabold text-black shadow-[2px_2px_0_0_var(--color-tape-lime)] hover:bg-[var(--color-tape-lime-soft)] disabled:opacity-60"
+                  >
+                    {exporting === "receipt" ? "Saving…" : "Share AI receipt"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={
+                      exporting !== null ||
+                      data.recommendations.ranked.length === 0
+                    }
+                    onClick={() =>
+                      exportNode(
+                        "recposters",
+                        recommendedPostersRef.current,
+                        "tastetape-recommended.png"
+                      )
+                    }
+                    className="rounded-lg bg-black px-3 py-1.5 text-xs font-extrabold text-[var(--color-tape-lime)] shadow-[2px_2px_0_0_var(--color-tape-lime)] hover:brightness-95 disabled:opacity-60"
+                  >
+                    {exporting === "recposters"
+                      ? "Saving…"
+                      : "Share recommended posters"}
+                  </button>
                 </div>
-                <p className="text-sm font-semibold text-[var(--color-tape-muted)]">
-                  {data.analysis.recommendationBlurb}
-                </p>
-                <h3 className="pt-2 text-sm font-extrabold text-black">
-                  Picks (metadata + AI notes)
-                </h3>
-                <ul className="space-y-4">
-                  {data.recommendations.ranked.map((r, i) => (
-                    <li key={`${r.provider}-${r.externalId}-${i}`}>
-                      <MediaRow
-                        work={r.work}
-                        extra={
-                          <>
-                            <p className="mt-1 text-xs font-bold text-[var(--color-tape-muted)]">
-                              Score {r.score}
-                            </p>
-                            <ul className="mt-1 list-inside list-disc text-xs font-medium text-[var(--color-tape-muted)]">
-                              {r.reasons.map((x) => (
-                                <li key={x}>{x}</li>
-                              ))}
-                            </ul>
-                            <p className="mt-2 text-xs font-medium leading-relaxed text-black">
-                              {r.aiComment}
-                            </p>
-                          </>
-                        }
-                      />
-                    </li>
-                  ))}
-                </ul>
               </div>
-
-              <div className="min-w-0 space-y-4">
-                <p className="text-sm font-semibold text-[var(--color-tape-muted)]">
-                  Export a share image (captures the card below).
-                </p>
-                <div className="max-w-full overflow-x-auto pb-4">
-                  <ExportCard
-                    ref={cardRef}
-                    title="My taste snapshot"
-                    subtitle={`Avg ${data.profile.avgRating} · ${data.profile.totalRated} titles`}
-                    body={exportBody}
-                    footer="tastetape — API & AI taste curation"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={downloadPng}
-                  className="rounded-xl border-2 border-black bg-white px-4 py-2 text-sm font-extrabold text-black shadow-[3px_3px_0_0_var(--color-tape-lime)] hover:bg-[var(--color-tape-lime-soft)]"
-                >
-                  Download PNG
-                </button>
+              <p className="text-sm font-medium leading-relaxed text-black">
+                {data.analysis.tasteSummary}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {data.analysis.keywords.map((k) => (
+                  <span
+                    key={k}
+                    className="rounded-full bg-[var(--color-tape-lime-soft)] px-2.5 py-0.5 text-xs font-extrabold text-black ring-1 ring-black/10"
+                  >
+                    {k}
+                  </span>
+                ))}
               </div>
-            </div>
+              <p className="text-sm font-semibold text-[var(--color-tape-muted)]">
+                {data.analysis.recommendationBlurb}
+              </p>
+              <h3 className="pt-2 text-sm font-extrabold text-black">
+                Picks (metadata + AI notes)
+              </h3>
+              <ul className="space-y-4">
+                {data.recommendations.ranked.map((r, i) => (
+                  <li key={`${r.provider}-${r.externalId}-${i}`}>
+                    <MediaRow
+                      work={r.work}
+                      extra={
+                        <>
+                          <p className="mt-1 text-xs font-bold text-[var(--color-tape-muted)]">
+                            Score {r.score}
+                          </p>
+                          <ul className="mt-1 list-inside list-disc text-xs font-medium text-[var(--color-tape-muted)]">
+                            {r.reasons.map((x) => (
+                              <li key={x}>{x}</li>
+                            ))}
+                          </ul>
+                          <p className="mt-2 text-xs font-medium leading-relaxed text-black">
+                            {r.aiComment}
+                          </p>
+                          <div className="mt-3">
+                            <button
+                              type="button"
+                              disabled={exporting !== null}
+                              onClick={() => exportSinglePick(i)}
+                              className="rounded-lg border-2 border-black bg-white px-2.5 py-1 text-[11px] font-extrabold text-black shadow-[2px_2px_0_0_var(--color-tape-lime)] hover:bg-[var(--color-tape-lime-soft)] disabled:opacity-60"
+                            >
+                              {exporting === `pick-${i}`
+                                ? "Saving…"
+                                : "Save as image"}
+                            </button>
+                          </div>
+                        </>
+                      }
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
           </div>
         )}
       </div>
+
+      {data && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            left: "-100000px",
+            top: 0,
+            pointerEvents: "none",
+          }}
+        >
+          <PostersRecap
+            ref={topPostersRef}
+            title="My top tapes"
+            subtitle={`Top ${Math.min(9, data.topRated.length)} by rating · ${data.profile.totalRated} titles total`}
+            items={data.topRated.map((t) => ({
+              title: t.title,
+              posterOrCoverUrl: t.posterOrCoverUrl,
+              rating: t.rating,
+            }))}
+            footer="tastetape — top rated"
+          />
+          <StatsRecap
+            ref={statsRef}
+            profile={data.profile}
+            stats={data.stats}
+          />
+          <ReceiptRecap
+            ref={receiptRef}
+            profile={data.profile}
+            analysis={data.analysis}
+            basis={data.topRated}
+            generatedAt={new Date()}
+          />
+          <PostersRecap
+            ref={recommendedPostersRef}
+            title="Recommended for you"
+            subtitle={`AI picks · ${data.recommendations.ranked.length} titles`}
+            items={data.recommendations.ranked.map((r) => ({
+              title: r.work.title,
+              posterOrCoverUrl: r.work.posterOrCoverUrl,
+            }))}
+            footer="tastetape — ai picks"
+          />
+          {singlePickIdx != null && data.recommendations.ranked[singlePickIdx] && (
+            <SinglePickCard
+              ref={singlePickRef}
+              pick={data.recommendations.ranked[singlePickIdx]}
+              rank={singlePickIdx + 1}
+            />
+          )}
+        </div>
+      )}
     </Layout>
   );
 }

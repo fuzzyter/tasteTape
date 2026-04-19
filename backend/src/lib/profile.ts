@@ -19,6 +19,7 @@ export type TasteProfileJson = {
     originCountry: string | null;
     language: string | null;
     ageRating: string | null;
+    posterOrCoverUrl: string | null;
     preferenceNote: string | null;
     reviewText: string | null;
   }>;
@@ -40,6 +41,7 @@ export async function buildTasteProfile(userId: string): Promise<TasteProfileJso
     originCountry: r.workCache.originCountry,
     language: r.workCache.language,
     ageRating: r.workCache.ageRating,
+    posterOrCoverUrl: r.workCache.posterOrCoverUrl,
     preferenceNote: r.preferenceNote,
     reviewText: r.reviewText,
   }));

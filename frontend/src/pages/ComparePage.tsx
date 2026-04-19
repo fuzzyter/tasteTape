@@ -118,6 +118,7 @@ export function ComparePage() {
     const dataUrl = await htmlToImage.toPng(cardRef.current, {
       pixelRatio: 2,
       cacheBust: true,
+      backgroundColor: "#ffffff",
     });
     const a = document.createElement("a");
     a.href = dataUrl;

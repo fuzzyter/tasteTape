@@ -200,6 +200,13 @@ export type RankedEnriched = {
   work: WorkCard;
 };
 
+export type TopRatedItem = {
+  title: string;
+  mediaType: MediaType;
+  rating: number;
+  posterOrCoverUrl: string | null;
+};
+
 export type AnalyzeResponse = {
   profile: {
     totalRated: number;
@@ -209,6 +216,7 @@ export type AnalyzeResponse = {
     yearRange: { min: number | null; max: number | null };
     sampleTitles: string[];
   };
+  topRated: TopRatedItem[];
   stats: TasteStats;
   analysis: {
     tasteSummary: string;

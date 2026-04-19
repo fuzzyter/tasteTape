@@ -303,8 +303,16 @@ export const meRoutes: FastifyPluginAsync = async (app) => {
       candidates
     );
 
+    const topRated = profile.items.slice(0, 9).map((i) => ({
+      title: i.title,
+      mediaType: i.mediaType,
+      rating: i.rating,
+      posterOrCoverUrl: i.posterOrCoverUrl,
+    }));
+
     const payload = {
       profile: profile.summary,
+      topRated,
       stats,
       analysis,
       recommendations: { ranked: enrichedRows },
