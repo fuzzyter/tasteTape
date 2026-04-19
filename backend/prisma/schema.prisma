@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MediaType {
+  book
+  movie
+  tv
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  friendCode   String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ratings UserWorkRating[]
+}
+
+model WorkCache {
+  id             String    @id @default(cuid())
+  provider       String
+  externalId     String
+  mediaType      MediaType
+  title          String
+  year           Int?
+  genres         String[]
+  synopsis       String?
+  originCountry  String?
+  language       String?
+  ageRating      String?
+  posterOrCoverUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ratings UserWorkRating[]
+
+  @@unique([provider, externalId, mediaType])
+  @@index([title])
+}
+
+model UserWorkRating {
+  id          String   @id @default(cuid())
+  userId      String
+  workCacheId String
+  rating      Int
+  reviewText  String?
+  tags        String[]
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workCache WorkCache @relation(fields: [workCacheId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, workCacheId])
+  @@index([userId])
+}
