@@ -29,7 +29,10 @@ export function verifyToken(token: string): JwtPayload {
   return decoded;
 }
 
-const friendCodeAlphabet = customAlphabet("23456789ABCDEFGHJKLMNPQRSTUVWXYZ", 8);
+const friendCodeAlphabet = customAlphabet(
+  "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+  16
+);
 
 export function generateFriendCode(): string {
   return friendCodeAlphabet();

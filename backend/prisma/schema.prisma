@@ -14,28 +14,31 @@ enum MediaType {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  friendCode   String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  friendCode    String   @unique
+  nickname      String?
+  comparePublic Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  ratings UserWorkRating[]
+  ratings   UserWorkRating[]
+  snapshots SavedSnapshot[]
 }
 
 model WorkCache {
-  id             String    @id @default(cuid())
-  provider       String
-  externalId     String
-  mediaType      MediaType
-  title          String
-  year           Int?
-  genres         String[]
-  synopsis       String?
-  originCountry  String?
-  language       String?
-  ageRating      String?
+  id               String    @id @default(cuid())
+  provider         String
+  externalId       String
+  mediaType        MediaType
+  title            String
+  year             Int?
+  genres           String[]
+  synopsis         String?
+  originCountry    String?
+  language         String?
+  ageRating        String?
   posterOrCoverUrl String?
 
   createdAt DateTime @default(now())
@@ -48,12 +51,13 @@ model WorkCache {
 }
 
 model UserWorkRating {
-  id          String   @id @default(cuid())
-  userId      String
-  workCacheId String
-  rating      Int
-  reviewText  String?
-  tags        String[]
+  id             String   @id @default(cuid())
+  userId         String
+  workCacheId    String
+  rating         Int
+  reviewText     String?
+  preferenceNote String?  @db.VarChar(300)
+  tags           String[]
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workCache WorkCache @relation(fields: [workCacheId], references: [id], onDelete: Cascade)
@@ -63,4 +67,17 @@ model UserWorkRating {
 
   @@unique([userId, workCacheId])
   @@index([userId])
+}
+
+model SavedSnapshot {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String
+  label     String?
+  payload   Json
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

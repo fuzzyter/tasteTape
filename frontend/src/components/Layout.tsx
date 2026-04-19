@@ -31,9 +31,13 @@ export function Layout({ children }: { children: ReactNode }) {
               친구와 비교
             </Link>
             {user && (
-              <span className="hidden text-stone-500 sm:inline">
-                {user.email}
-              </span>
+              <Link
+                to="/settings"
+                className="hidden max-w-[140px] truncate text-stone-600 hover:text-stone-900 sm:inline"
+                title={user.email}
+              >
+                {user.nickname?.trim() || user.email.split("@")[0]}
+              </Link>
             )}
             <button
               type="button"

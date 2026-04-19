@@ -5,6 +5,7 @@ import { AnalyzePage } from "./pages/AnalyzePage";
 import { AuthPage } from "./pages/AuthPage";
 import { ComparePage } from "./pages/ComparePage";
 import { LibraryPage } from "./pages/LibraryPage";
+import { SettingsPage } from "./pages/SettingsPage";
 
 function Protected({ children }: { children: ReactNode }) {
   const { token } = useAuth();
@@ -38,6 +39,14 @@ function AppRoutes() {
         element={
           <Protected>
             <ComparePage />
+          </Protected>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <Protected>
+            <SettingsPage />
           </Protected>
         }
       />

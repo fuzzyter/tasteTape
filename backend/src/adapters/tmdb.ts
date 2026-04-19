@@ -128,10 +128,20 @@ export async function tmdbTvDetail(id: string): Promise<NormalizedWork> {
   };
 }
 
+function yearToDateRange(yearMin?: number, yearMax?: number): { gte?: string; lte?: string } {
+  if (yearMin == null && yearMax == null) return {};
+  return {
+    gte: yearMin != null ? `${yearMin}-01-01` : undefined,
+    lte: yearMax != null ? `${yearMax}-12-31` : undefined,
+  };
+}
+
 /** Discover popular movies as recommendation candidates */
 export async function tmdbDiscoverMovies(opts: {
   withGenres?: string;
   page?: number;
+  yearMin?: number;
+  yearMax?: number;
 }): Promise<NormalizedWork[]> {
   const params: Record<string, string> = {
     sort_by: "popularity.desc",
@@ -139,6 +149,9 @@ export async function tmdbDiscoverMovies(opts: {
     include_adult: "false",
   };
   if (opts.withGenres) params.with_genres = opts.withGenres;
+  const dr = yearToDateRange(opts.yearMin, opts.yearMax);
+  if (dr.gte) params["primary_release_date.gte"] = dr.gte;
+  if (dr.lte) params["primary_release_date.lte"] = dr.lte;
   const data = await getJson<{
     results: Array<{
       id: number;
@@ -153,6 +166,42 @@ export async function tmdbDiscoverMovies(opts: {
     mediaType: "movie" as const,
     title: r.title,
     year: r.release_date ? parseInt(r.release_date.slice(0, 4), 10) : null,
+    genres: [],
+    synopsis: r.overview?.trim() || null,
+    originCountry: null,
+    language: null,
+    ageRating: null,
+    externalRef: { provider: "tmdb", id: String(r.id) },
+    posterOrCoverUrl: posterUrl(r.poster_path ?? null),
+  }));
+}
+
+export async function tmdbDiscoverTv(opts: {
+  page?: number;
+  yearMin?: number;
+  yearMax?: number;
+}): Promise<NormalizedWork[]> {
+  const params: Record<string, string> = {
+    sort_by: "popularity.desc",
+    page: String(opts.page ?? 1),
+    include_adult: "false",
+  };
+  const dr = yearToDateRange(opts.yearMin, opts.yearMax);
+  if (dr.gte) params["first_air_date.gte"] = dr.gte;
+  if (dr.lte) params["first_air_date.lte"] = dr.lte;
+  const data = await getJson<{
+    results: Array<{
+      id: number;
+      name: string;
+      first_air_date?: string;
+      overview?: string;
+      poster_path?: string | null;
+    }>;
+  }>("/discover/tv", params);
+  return (data.results ?? []).map((r) => ({
+    mediaType: "tv" as const,
+    title: r.name,
+    year: r.first_air_date ? parseInt(r.first_air_date.slice(0, 4), 10) : null,
     genres: [],
     synopsis: r.overview?.trim() || null,
     originCountry: null,

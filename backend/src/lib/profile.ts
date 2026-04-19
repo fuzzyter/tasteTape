@@ -19,6 +19,8 @@ export type TasteProfileJson = {
     originCountry: string | null;
     language: string | null;
     ageRating: string | null;
+    preferenceNote: string | null;
+    reviewText: string | null;
   }>;
 };
 
@@ -38,6 +40,8 @@ export async function buildTasteProfile(userId: string): Promise<TasteProfileJso
     originCountry: r.workCache.originCountry,
     language: r.workCache.language,
     ageRating: r.workCache.ageRating,
+    preferenceNote: r.preferenceNote,
+    reviewText: r.reviewText,
   }));
 
   const byMedia: Record<string, number> = {};
@@ -77,4 +81,68 @@ export async function buildTasteProfile(userId: string): Promise<TasteProfileJso
     },
     items,
   };
+}
+
+/** For compare: works with refs for AI to pick exact items */
+export async function buildRatedWorksRefs(userId: string, minRating = 3) {
+  const rows = await prisma.userWorkRating.findMany({
+    where: { userId, rating: { gte: minRating } },
+    include: { workCache: true },
+    orderBy: { rating: "desc" },
+  });
+  return rows.map((r) => ({
+    rating: r.rating,
+    preferenceNote: r.preferenceNote,
+    reviewText: r.reviewText,
+    work: {
+      title: r.workCache.title,
+      mediaType: r.workCache.mediaType,
+      provider: r.workCache.provider,
+      externalId: r.workCache.externalId,
+      year: r.workCache.year,
+      genres: r.workCache.genres,
+      posterOrCoverUrl: r.workCache.posterOrCoverUrl,
+    },
+  }));
+}
+
+export async function findOverlapWorks(
+  userIdA: string,
+  userIdB: string,
+  minRating = 4
+): Promise<Array<{ title: string; mediaType: MediaType; myRating: number; theirRating: number }>> {
+  const [a, b] = await Promise.all([
+    prisma.userWorkRating.findMany({
+      where: { userId: userIdA, rating: { gte: minRating } },
+      include: { workCache: true },
+    }),
+    prisma.userWorkRating.findMany({
+      where: { userId: userIdB, rating: { gte: minRating } },
+      include: { workCache: true },
+    }),
+  ]);
+  const mapB = new Map<string, (typeof b)[0]>();
+  for (const x of b) {
+    const k = `${x.workCache.provider}:${x.workCache.externalId}:${x.workCache.mediaType}`;
+    mapB.set(k, x);
+  }
+  const out: Array<{
+    title: string;
+    mediaType: MediaType;
+    myRating: number;
+    theirRating: number;
+  }> = [];
+  for (const x of a) {
+    const k = `${x.workCache.provider}:${x.workCache.externalId}:${x.workCache.mediaType}`;
+    const y = mapB.get(k);
+    if (y) {
+      out.push({
+        title: x.workCache.title,
+        mediaType: x.workCache.mediaType,
+        myRating: x.rating,
+        theirRating: y.rating,
+      });
+    }
+  }
+  return out;
 }

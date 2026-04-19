@@ -15,6 +15,22 @@ export type NormalizedWork = {
   posterOrCoverUrl: string | null;
 };
 
+export type User = {
+  id: string;
+  email: string;
+  friendCode: string;
+  nickname: string | null;
+  comparePublic: boolean;
+};
+
+export type WorkCard = {
+  title: string;
+  year: number | null;
+  posterOrCoverUrl: string | null;
+  synopsis: string | null;
+  mediaType: MediaType;
+};
+
 async function request<T>(
   path: string,
   opts: RequestInit & { token?: string | null } = {}
@@ -24,7 +40,6 @@ async function request<T>(
   };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   const { token: _t, ...rest } = opts;
-  // 본문이 있을 때만 JSON 헤더 (빈 body + application/json 은 Fastify에서 400)
   if (rest.body != null && rest.body !== "") {
     headers["Content-Type"] = "application/json";
   }
@@ -54,10 +69,23 @@ export const api = {
     request<{ works: NormalizedWork[] }>(
       `/search?q=${encodeURIComponent(q)}&mediaType=${mediaType}`
     ),
-  me: (token: string) =>
-    request<User>("/me", { token }),
+  me: (token: string) => request<User>("/me", { token }),
+  patchMe: (
+    token: string,
+    body: { nickname?: string | null; comparePublic?: boolean }
+  ) =>
+    request<User>("/me", { method: "PATCH", token, body: JSON.stringify(body) }),
   myWorks: (token: string) =>
     request<{ works: RatedWork[] }>("/me/works", { token }),
+  myStats: (token: string) =>
+    request<{ stats: TasteStats }>("/me/stats", { token }),
+  snapshots: (token: string) =>
+    request<{ snapshots: SnapshotMeta[] }>("/me/snapshots", { token }),
+  snapshot: (token: string, id: string) =>
+    request<{ id: string; kind: string; label: string | null; payload: unknown; createdAt: string }>(
+      `/me/snapshots/${id}`,
+      { token }
+    ),
   addWork: (
     token: string,
     body: {
@@ -66,6 +94,7 @@ export const api = {
       mediaType: MediaType;
       rating: number;
       reviewText?: string;
+      preferenceNote?: string | null;
     }
   ) =>
     request<{ id: string; workCacheId: string }>("/me/works", {
@@ -76,7 +105,11 @@ export const api = {
   patchWork: (
     token: string,
     ratingId: string,
-    body: { rating?: number; reviewText?: string | null }
+    body: {
+      rating?: number;
+      reviewText?: string | null;
+      preferenceNote?: string | null;
+    }
   ) =>
     request(`/me/works/${ratingId}`, {
       method: "PATCH",
@@ -85,26 +118,61 @@ export const api = {
     }),
   deleteWork: (token: string, ratingId: string) =>
     request<void>(`/me/works/${ratingId}`, { method: "DELETE", token }),
-  analyze: (token: string) =>
-    request<AnalyzeResponse>("/me/analyze", { method: "POST", token }),
-  compare: (token: string, friendCode: string) =>
+  analyze: (
+    token: string,
+    body?: {
+      yearMin?: number;
+      yearMax?: number;
+      mediaTypes?: MediaType[];
+      save?: boolean;
+    }
+  ) =>
+    request<AnalyzeResponse>("/me/analyze", {
+      method: "POST",
+      token,
+      body: JSON.stringify(body ?? {}),
+    }),
+  compare: (
+    token: string,
+    body: { friendCodes: string[]; save?: boolean }
+  ) =>
     request<CompareResponse>("/me/compare", {
       method: "POST",
       token,
-      body: JSON.stringify({ friendCode }),
+      body: JSON.stringify(body),
     }),
 };
 
-export type User = {
+export type SnapshotMeta = {
   id: string;
-  email: string;
-  friendCode: string;
+  kind: string;
+  label: string | null;
+  createdAt: string;
+};
+
+export type TasteStats = {
+  byMedia: Array<{
+    mediaType: MediaType;
+    count: number;
+    avgRating: number;
+  }>;
+  genreStars: Array<{
+    genre: string;
+    totalStars: number;
+    count: number;
+    avgRating: number;
+  }>;
+  topGenresByAvg: Array<{ genre: string; avgRating: number; count: number }>;
+  bottomGenresByAvg: Array<{ genre: string; avgRating: number; count: number }>;
+  ratingHistogram: Record<number, number>;
+  yearHistogram: Array<{ year: number; count: number; avgRating: number }>;
 };
 
 export type RatedWork = {
   id: string;
   rating: number;
   reviewText: string | null;
+  preferenceNote: string | null;
   tags: string[];
   work: {
     id: string;
@@ -119,6 +187,17 @@ export type RatedWork = {
   };
 };
 
+export type RankedEnriched = {
+  title: string;
+  provider: string;
+  externalId: string;
+  mediaType: MediaType;
+  score: number;
+  reasons: string[];
+  aiComment: string;
+  work: WorkCard;
+};
+
 export type AnalyzeResponse = {
   profile: {
     totalRated: number;
@@ -128,29 +207,46 @@ export type AnalyzeResponse = {
     yearRange: { min: number | null; max: number | null };
     sampleTitles: string[];
   };
+  stats: TasteStats;
   analysis: {
     tasteSummary: string;
     keywords: string[];
     recommendationBlurb: string;
   };
   recommendations: {
-    ranked: Array<{
-      title: string;
-      provider: string;
-      externalId: string;
-      mediaType: MediaType;
-      score: number;
-      reasons: string[];
-    }>;
+    ranked: RankedEnriched[];
   };
 };
 
+export type EnrichedPick = {
+  work: WorkCard;
+  recommendationPitch?: string;
+  [key: string]: unknown;
+};
+
 export type CompareResponse = {
-  friend: { email: string; friendCode: string };
+  meLabel: string;
+  friends: Array<{ nicknameLabel: string; friendCode: string }>;
   result: {
-    similarityScore: number;
-    comparisonSummary: string;
-    watchTogether: string[];
-    friendPickForYou: string[];
+    introduction: string;
+    friends: Array<{
+      nicknameLabel: string;
+      similarityScore: number;
+      paragraph: string;
+    }>;
+    overlapCommentary: Array<{ title: string; sharedJoyComment: string }>;
+    watchTogetherNew: EnrichedPick[];
+    picksFromFriendLibsForMe: Array<
+      EnrichedPick & {
+        friendNicknameLabel: string;
+        whyForMe: string;
+      }
+    >;
+    picksFromMyLibForFriends: Array<
+      EnrichedPick & {
+        toFriendNicknameLabel: string;
+        whyTheyMightLike: string;
+      }
+    >;
   };
 };

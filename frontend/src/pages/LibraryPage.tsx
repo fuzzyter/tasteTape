@@ -69,6 +69,15 @@ export function LibraryPage() {
     await refresh();
   }
 
+  async function savePreferenceNote(id: string, text: string) {
+    if (!token) return;
+    const trimmed = text.trim().slice(0, 300);
+    await api.patchWork(token, id, {
+      preferenceNote: trimmed.length ? trimmed : null,
+    });
+    await refresh();
+  }
+
   async function remove(id: string) {
     if (!token) return;
     if (!confirm("이 작품을 목록에서 제거할까요?")) return;
@@ -208,8 +217,9 @@ export function LibraryPage() {
               {list.map((row) => (
                 <li
                   key={row.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-stone-200/80 bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center"
+                  className="flex flex-col gap-3 rounded-2xl border border-stone-200/80 bg-white/90 p-4 shadow-sm"
                 >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   {row.work.posterOrCoverUrl && (
                     <img
                       src={row.work.posterOrCoverUrl}
@@ -224,7 +234,7 @@ export function LibraryPage() {
                       {row.work.year != null ? ` · ${row.work.year}` : ""}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <select
                       className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm"
                       value={row.rating}
@@ -246,6 +256,23 @@ export function LibraryPage() {
                       삭제
                     </button>
                   </div>
+                  </div>
+                  <label className="w-full text-xs text-stone-500">
+                    호불호 메모 (선택, 최대 300자)
+                    <textarea
+                      className="mt-1 w-full rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm text-stone-800"
+                      rows={2}
+                      maxLength={300}
+                      defaultValue={row.preferenceNote ?? ""}
+                      placeholder="왜 이 점수를 줬는지 짧게 적어 주세요."
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        const prev = (row.preferenceNote ?? "").trim();
+                        if (v === prev) return;
+                        void savePreferenceNote(row.id, e.target.value);
+                      }}
+                    />
+                  </label>
                 </li>
               ))}
             </ul>

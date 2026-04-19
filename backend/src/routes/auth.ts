@@ -42,7 +42,13 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const token = signToken({ sub: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, email: user.email, friendCode: user.friendCode },
+      user: {
+        id: user.id,
+        email: user.email,
+        friendCode: user.friendCode,
+        nickname: user.nickname,
+        comparePublic: user.comparePublic,
+      },
     };
   });
 
@@ -62,7 +68,13 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const token = signToken({ sub: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, email: user.email, friendCode: user.friendCode },
+      user: {
+        id: user.id,
+        email: user.email,
+        friendCode: user.friendCode,
+        nickname: user.nickname,
+        comparePublic: user.comparePublic,
+      },
     };
   });
 };

@@ -18,10 +18,10 @@ async function ensureUser(email: string, password: string, friendCode: string) {
 }
 
 async function main() {
-  await ensureUser("alice@demo.local", "demo1234", "SEEDALIC");
-  await ensureUser("bob@demo.local", "demo1234", "SEEDBOBO");
+  await ensureUser("alice@demo.local", "demo1234", "SEEDTASTEALICE01");
+  await ensureUser("bob@demo.local", "demo1234", "SEEDTASTEBOBO001");
   console.log("Seed OK: alice@demo.local, bob@demo.local (password: demo1234)");
-  console.log("Friend codes: SEEDALIC, SEEDBOBO");
+  console.log("Friend codes: SEEDTASTEALICE01, SEEDTASTEBOBO001");
 }
 
 main()
