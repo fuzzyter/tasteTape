@@ -1,0 +1,23 @@
+{
+  "name": "tastetape-backend",
+  "version": "1.0.0",
+  "description": "Backend for TasteTape",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "echo Error: no test specified && exit 1"
+  },
+  "author": "Tracey Kamwimbi and Naeun Kim",
+  "license": "MIT",
+  "dependencies": {
+    "@clerk/express": "^2.1.5",
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "mongoose": "^8.23.0",
+    "nodemon": "^3.1.14"
+  }
+}
