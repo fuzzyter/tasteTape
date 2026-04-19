@@ -86,6 +86,8 @@ export const api = {
       `/me/snapshots/${id}`,
       { token }
     ),
+  deleteSnapshot: (token: string, id: string) =>
+    request<void>(`/me/snapshots/${id}`, { method: "DELETE", token }),
   addWork: (
     token: string,
     body: {

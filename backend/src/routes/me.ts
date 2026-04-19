@@ -108,6 +108,21 @@ export const meRoutes: FastifyPluginAsync = async (app) => {
     return row;
   });
 
+  app.delete(
+    "/me/snapshots/:id",
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const existing = await prisma.savedSnapshot.findFirst({
+        where: { id, userId: request.user!.sub },
+        select: { id: true },
+      });
+      if (!existing) return reply.status(404).send({ error: "Not found" });
+      await prisma.savedSnapshot.delete({ where: { id } });
+      return reply.status(204).send();
+    }
+  );
+
   app.get("/me/works", { preHandler: [authenticate] }, async (request) => {
     const rows = await prisma.userWorkRating.findMany({
       where: { userId: request.user!.sub },

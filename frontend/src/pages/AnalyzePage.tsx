@@ -104,6 +104,17 @@ export function AnalyzePage() {
     }
   }
 
+  async function removeSnapshot(id: string) {
+    if (!token) return;
+    if (!confirm("Delete this saved analysis?")) return;
+    try {
+      await api.deleteSnapshot(token, id);
+      setSnapshots((prev) => prev.filter((s) => s.id !== id));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not delete snapshot");
+    }
+  }
+
   async function downloadPng() {
     if (!cardRef.current) return;
     const dataUrl = await htmlToImage.toPng(cardRef.current, {
@@ -122,11 +133,11 @@ export function AnalyzePage() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="min-w-0 space-y-6">
         <div>
           <h1 className="text-2xl font-extrabold text-black">Taste analysis</h1>
           <p className="mt-1 text-sm font-semibold text-[var(--color-tape-muted)]">
-            Build your own RECAP and find your TASTE
+            Create your own RECAP and discover your TASTE!
           </p>
         </div>
 
@@ -209,21 +220,35 @@ export function AnalyzePage() {
           </p>
         )}
 
-        {snapshots.length > 0 && (
+        {snapshots.filter((s) => s.kind === "analyze").length > 0 && (
           <div className="rounded-xl border-2 border-black/10 bg-white p-3 text-sm shadow-sm">
             <p className="font-extrabold text-black">Saved analyses</p>
             <ul className="mt-2 flex flex-wrap gap-2">
-              {snapshots.filter((s) => s.kind === "analyze").map((s) => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    className="rounded-lg bg-[var(--color-tape-lime-soft)] px-2 py-1 text-xs font-extrabold text-black hover:brightness-95"
-                    onClick={() => loadSnapshot(s.id)}
+              {snapshots
+                .filter((s) => s.kind === "analyze")
+                .map((s) => (
+                  <li
+                    key={s.id}
+                    className="flex items-stretch overflow-hidden rounded-lg bg-[var(--color-tape-lime-soft)] ring-1 ring-black/10"
                   >
-                    {s.label ?? s.id.slice(0, 8)}
-                  </button>
-                </li>
-              ))}
+                    <button
+                      type="button"
+                      className="px-2 py-1 text-xs font-extrabold text-black hover:brightness-95"
+                      onClick={() => loadSnapshot(s.id)}
+                    >
+                      {s.label ?? s.id.slice(0, 8)}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${s.label ?? s.id.slice(0, 8)}`}
+                      title="Delete"
+                      className="border-l border-black/15 px-2 text-xs font-extrabold text-[var(--color-tape-muted)] hover:bg-red-500/90 hover:text-white"
+                      onClick={() => removeSnapshot(s.id)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
         )}
@@ -271,7 +296,7 @@ export function AnalyzePage() {
             </section>
 
             <div className="grid gap-8 lg:grid-cols-2">
-              <div className="space-y-4 rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
+              <div className="min-w-0 space-y-4 rounded-2xl border-2 border-black/10 bg-[var(--color-tape-card)] p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
                 <h2 className="text-lg font-extrabold text-black">AI summary</h2>
                 <p className="text-sm font-medium leading-relaxed text-black">
                   {data.analysis.tasteSummary}
@@ -318,11 +343,11 @@ export function AnalyzePage() {
                 </ul>
               </div>
 
-              <div className="space-y-4">
+              <div className="min-w-0 space-y-4">
                 <p className="text-sm font-semibold text-[var(--color-tape-muted)]">
                   Export a share image (captures the card below).
                 </p>
-                <div className="overflow-x-auto pb-4">
+                <div className="max-w-full overflow-x-auto pb-4">
                   <ExportCard
                     ref={cardRef}
                     title="My taste snapshot"

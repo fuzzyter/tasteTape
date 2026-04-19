@@ -52,7 +52,9 @@ export function Layout({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-5xl overflow-x-hidden px-4 py-8">
+        {children}
+      </main>
     </div>
   );
 }

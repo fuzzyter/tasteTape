@@ -102,6 +102,17 @@ export function ComparePage() {
     }
   }
 
+  async function removeSnapshot(id: string) {
+    if (!token) return;
+    if (!confirm("Delete this saved compare?")) return;
+    try {
+      await api.deleteSnapshot(token, id);
+      setSnapshots((prev) => prev.filter((s) => s.id !== id));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not delete snapshot");
+    }
+  }
+
   async function downloadPng() {
     if (!cardRef.current) return;
     const dataUrl = await htmlToImage.toPng(cardRef.current, {
@@ -168,13 +179,25 @@ export function ComparePage() {
               {snapshots
                 .filter((s) => s.kind === "compare")
                 .map((s) => (
-                  <li key={s.id}>
+                  <li
+                    key={s.id}
+                    className="flex items-stretch overflow-hidden rounded-lg bg-[var(--color-tape-lime-soft)] ring-1 ring-black/10"
+                  >
                     <button
                       type="button"
-                      className="rounded-lg bg-[var(--color-tape-lime-soft)] px-2 py-1 text-xs font-extrabold text-black hover:brightness-95"
+                      className="px-2 py-1 text-xs font-extrabold text-black hover:brightness-95"
                       onClick={() => loadSnapshot(s.id)}
                     >
                       {s.label ?? s.id.slice(0, 8)}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${s.label ?? s.id.slice(0, 8)}`}
+                      title="Delete"
+                      className="border-l border-black/15 px-2 text-xs font-extrabold text-[var(--color-tape-muted)] hover:bg-red-500/90 hover:text-white"
+                      onClick={() => removeSnapshot(s.id)}
+                    >
+                      ×
                     </button>
                   </li>
                 ))}
@@ -308,7 +331,7 @@ export function ComparePage() {
               </ul>
             </section>
 
-            <div className="overflow-x-auto pb-4">
+            <div className="max-w-full overflow-x-auto pb-4">
               <ExportCard
                 ref={cardRef}
                 title="Taste compare"
