@@ -183,13 +183,13 @@ export const compareRoutes: FastifyPluginAsync = async (app) => {
       }
 
       const myProfile = await buildTasteProfile(meId);
-      const myRated = await buildRatedWorksRefs(meId, 3);
+      const myRated = await buildRatedWorksRefs(meId);
       const myLabel = nick(me);
 
       const friendPayload = await Promise.all(
         friends.map(async (f) => {
           const profile = await buildTasteProfile(f.user.id);
-          const rated = await buildRatedWorksRefs(f.user.id, 3);
+          const rated = await buildRatedWorksRefs(f.user.id);
           return { label: f.label, profile, rated };
         })
       );

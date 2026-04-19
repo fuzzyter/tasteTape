@@ -84,8 +84,6 @@ export async function tmdbMovieDetail(id: string): Promise<NormalizedWork> {
     spoken_languages?: Array<{ iso_639_1: string; name: string }>;
   }>(`/movie/${id}`);
 
-  const ageRating: string | null = null;
-
   return {
     mediaType: "movie",
     title: m.title,
@@ -94,7 +92,7 @@ export async function tmdbMovieDetail(id: string): Promise<NormalizedWork> {
     synopsis: m.overview?.trim() || null,
     originCountry: m.origin_country?.[0] ?? null,
     language: m.spoken_languages?.[0]?.name ?? null,
-    ageRating,
+    ageRating: null,
     externalRef: { provider: "tmdb", id: String(m.id) },
     posterOrCoverUrl: posterUrl(m.poster_path ?? null),
   };
@@ -112,8 +110,6 @@ export async function tmdbTvDetail(id: string): Promise<NormalizedWork> {
     spoken_languages?: Array<{ iso_639_1: string; name: string }>;
   }>(`/tv/${id}`);
 
-  const ageRating: string | null = null;
-
   return {
     mediaType: "tv",
     title: m.name,
@@ -122,7 +118,7 @@ export async function tmdbTvDetail(id: string): Promise<NormalizedWork> {
     synopsis: m.overview?.trim() || null,
     originCountry: m.origin_country?.[0] ?? null,
     language: m.spoken_languages?.[0]?.name ?? null,
-    ageRating,
+    ageRating: null,
     externalRef: { provider: "tmdb", id: String(m.id) },
     posterOrCoverUrl: posterUrl(m.poster_path ?? null),
   };

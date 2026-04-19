@@ -38,5 +38,3 @@ export async function fetchWorkDetail(
   if (mediaType === "movie") return tmdbMovieDetail(externalId);
   return tmdbTvDetail(externalId);
 }
-
-export { tmdbDiscoverMovies } from "./tmdb.js";

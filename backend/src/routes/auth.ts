@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
+import type { User } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { generateFriendCode, hashPassword, signToken, verifyPassword } from "../lib/auth.js";
@@ -13,24 +14,13 @@ const loginBody = z.object({
   password: z.string(),
 });
 
-
-type AuthUserOut = {
-  id: string;
-  email: string;
-  friendCode: string;
-  nickname: string | null;
-  comparePublic: boolean;
-};
-
-function authUserOut(user: { id: string; email: string; friendCode: string } & Record<string, unknown>): AuthUserOut {
-  const nickname = user["nickname"];
-  const comparePublic = user["comparePublic"];
+function authUserOut(user: User) {
   return {
     id: user.id,
     email: user.email,
     friendCode: user.friendCode,
-    nickname: typeof nickname === "string" || nickname === null ? nickname : null,
-    comparePublic: comparePublic === false ? false : true,
+    nickname: user.nickname,
+    comparePublic: user.comparePublic,
   };
 }
 
